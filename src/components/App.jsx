@@ -1,14 +1,14 @@
 import { fetchImages } from 'api';
-import React, { Component, useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Searchbar } from './Searchbar/Searchbar';
 import { ImageGallery } from './ImageGallery/ImageGallery';
 import { Button } from './Button/Button';
 import { Loader } from './Loader/Loader';
+import Notiflix from 'notiflix';
 
 export const App = () => {
   const [imageItems, setImageItems] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [page, setPage] = useState(1);
   const [loadMore, setLoadMore] = useState(false);
@@ -17,17 +17,23 @@ export const App = () => {
     async function images() {
       try {
         setLoading(true);
-        setError(false);
         const resp = await fetchImages(searchQuery, page);
-        console.log(resp);
         if (resp.hits.length === 0) {
-          alert(`Nothing was found for this query - ${searchQuery}`);
+          Notiflix.Notify.failure(
+            `Nothing was found for this query - "${searchQuery}"`
+          );
         }
         setImageItems(prevState => [...prevState, ...resp.hits]);
         setLoadMore(page < Math.ceil(resp.totalHits / 12));
       } catch (error) {
-        setError(true);
-        alert(error.message);
+        Notiflix.Report.failure(
+          `${error.message}`,
+          'Something went wrong, please try reloading this page',
+          'Ok',
+          {
+            titleMaxLength: 50,
+          }
+        );
       } finally {
         setLoading(false);
       }
@@ -47,7 +53,6 @@ export const App = () => {
 
   const increasePage = () => {
     setPage(prevState => {
-      console.log(prevState);
       return prevState + 1;
     });
   };
